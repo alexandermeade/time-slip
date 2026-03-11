@@ -1,0 +1,12 @@
+import($, Level) from "./levels/LevelSchema.jason"
+
+level_name := "level 1"
+level_tiles := [
+    [0, 0, 0, 1],
+    [0, 0, 0, 0],
+    [1, 1, 1, 1]
+]
+
+level: Level = Level(level_name, level_tiles)
+
+out level

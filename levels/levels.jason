@@ -1,0 +1,5 @@
+import($, Level) from "./levels/LevelSchema.jason"
+
+level1: Level = include "./levels/level1.jason"
+
+out [level1]

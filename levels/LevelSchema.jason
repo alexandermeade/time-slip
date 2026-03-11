@@ -1,0 +1,18 @@
+
+EntityTag :: "Player" | "Enviorment"
+
+Entity :: {
+    name: String,
+    tag: EntityTag,  
+    pos: [Number, Number]
+}
+
+Level :: {
+    name: String,
+    tiles: [Entity]
+}
+Level(String, [Entity]) :: Level
+Level(name, Entities) {
+    name: name,
+    tiles: tiles
+}
