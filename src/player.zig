@@ -66,6 +66,39 @@ pub const Player = struct {
         // Limit vertical speed
         self.velocity.y = std.math.clamp(self.velocity.y, -self.max_falling_speed, self.max_vertical_speed);
     }
+    
+    pub fn isTouchingWall(self: @This(), enviroment: []rl.Rectangle) struct {bool, bool} {
+        const lHand = rl.Rectangle {
+            .x = self.transformer.x - self.transformer.width/2 - 1,
+            .y = self.transformer.y + self.transformer.height/2,
+            .width = 1,
+            .height = 2
+        };
+
+        const rHand = rl.Rectangle {
+            .x = self.transformer.x + self.transformer.width + 1,
+            .y = self.transformer.y + self.transformer.height/2,
+            .width = 1,
+            .height = 2
+        };
+        rl.drawRectangleRec(lHand, rl.Color.red);
+
+        rl.drawRectangleRec(rHand, rl.Color.green);
+
+        var lHandWall = false;
+        var rHandWall = false;
+
+        for (enviroment) |place| {
+            if (!lHandWall) {
+                lHandWall = lHand.checkCollision(place);
+            }
+            if (!rHandWall) {
+                rHandWall = rHand.checkCollision(place);
+            }
+        }
+
+        return .{lHandWall, rHandWall};
+    }
 
     pub fn isGrounded(self: @This(), floor: rl.Rectangle) bool {
         const foot = rl.Rectangle {
