@@ -16,9 +16,9 @@ pub const Player = struct {
             .velocity = rl.Vector2.zero(),
             .transformer = rl.Rectangle.init(pos.x, pos.y, dim.x, dim.y),  
             .prev_pos = .zero(),
-            .max_horizontal_speed = 4,
-            .max_vertical_speed = 4,
-            .max_falling_speed = 9,
+            .max_horizontal_speed = 5,
+            .max_vertical_speed = 18,
+            .max_falling_speed = 18,
         };
     }
     
@@ -27,51 +27,55 @@ pub const Player = struct {
         self.transformer.y = self.prev_pos.y;
     }
 
-    pub fn move(self: *Player, collider: rl.Rectangle) void {
-        const friction: i32 = 1;
+    pub fn move(self: *Player, colliders: std.ArrayList(rl.Rectangle)) void {
+        const friction: f32 = 1.0;
 
         self.prev_pos.x = self.transformer.x;
         self.prev_pos.y = self.transformer.y;
 
+        // Move horizontally
         self.transformer.x += self.velocity.x;
-
-        if (self.transformer.checkCollision(collider)) {
-            self.transformer.x = self.prev_pos.x;
-            self.velocity.x = 0;
+        for (colliders.items) |collider| {
+            if (self.transformer.checkCollision(collider)) {
+                self.transformer.x = self.prev_pos.x;
+                self.velocity.x = 0;
+                break; // stop checking further collisions on X
+            }
         }
 
+        // Move vertically
         self.transformer.y += self.velocity.y;
-
-        if (self.transformer.checkCollision(collider)) {
-            self.transformer.y = self.prev_pos.y;
-            self.velocity.y = 0;
+        for (colliders.items) |collider| {
+            if (self.transformer.checkCollision(collider)) {
+                self.transformer.y = self.prev_pos.y;
+                self.velocity.y = 0;
+                break; // stop checking further collisions on Y
+            }
         }
 
-        //apply friction
+        // Apply friction horizontally
         if (self.velocity.x > 0) {
             self.velocity.x -= friction;
             self.velocity.x = std.math.clamp(self.velocity.x, 0, self.max_horizontal_speed);
         } else if (self.velocity.x < 0) {
             self.velocity.x += friction;
             if (self.velocity.x > 0) self.velocity.x = 0;
+            self.velocity.x = std.math.clamp(self.velocity.x, -self.max_horizontal_speed, 0);
         }
 
-        if (self.velocity.y > 0) {
-            self.velocity.y -= friction;
-            self.velocity.y = std.math.clamp(self.velocity.y, 0, self.max_falling_speed);
-        } else if (self.velocity.y < 0) {
-            self.velocity.y += friction;
-            if (self.velocity.y > 0) self.velocity.y = 0;
-        }
+        // Limit vertical speed
+        self.velocity.y = std.math.clamp(self.velocity.y, -self.max_falling_speed, self.max_vertical_speed);
     }
 
     pub fn isGrounded(self: @This(), floor: rl.Rectangle) bool {
         const foot = rl.Rectangle {
-            .x = self.transformer.x,
-            .y = self.transformer.y + self.transformer.height + 1,
-            .width = 1,
+            .x = self.transformer.x + self.transformer.width/2,
+            .y = self.transformer.y + self.transformer.height + 3,
+            .width = 3,
             .height = 1,
         };
+
+        rl.drawRectangleRec(foot, rl.Color.green);
 
         return foot.checkCollision(floor);
     }
