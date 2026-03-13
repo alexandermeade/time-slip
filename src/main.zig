@@ -3,8 +3,6 @@ const rl = @import("raylib");
 const player_zig = @import("player.zig");
 
 pub fn main() anyerror!void {
-    // Initialization
-    //--------------------------------------------------------------------------------------
     var debugAllocator = std.heap.DebugAllocator(.{}).init;
     defer if( debugAllocator.deinit() != .ok) @panic("leak");
     const gpa = debugAllocator.allocator();
@@ -23,62 +21,18 @@ pub fn main() anyerror!void {
     var enviorment = std.ArrayList(rl.Rectangle).empty;
     defer enviorment.deinit(gpa);
     try enviorment.append(gpa, floor);
-    try enviorment.append(gpa, rl.Rectangle.init(100, 200, 30, 10));
-    try enviorment.append(gpa, rl.Rectangle.init(200, 0, 30, 1000));
 
+    try enviorment.append(gpa, rl.Rectangle.init(50, 250, 30, 40));
+    try enviorment.append(gpa, rl.Rectangle.init(100, 150, 30, 500));
 
-
-
+    try enviorment.append(gpa, rl.Rectangle.init(200, 150, 30, 500));
     
-    // Main game loop
+    try enviorment.append(gpa, rl.Rectangle.init(300, 0, 30, 1000));
+
     while (!rl.windowShouldClose()) { // Detect window close button or ESC key
-        // Update
-        //----------------------------------------------------------------------------------
-        // TODO: Update your variables here
-        //----------------------------------------------------------------------------------
-        rl.pollInputEvents();
-
-        var player_grounded = false;
-        for (enviorment.items) |place| {
-            if (player_grounded) {
-                break;
-            }
-            player_grounded = player.isGrounded(place);
-        }
-
-        const player_fall_speed:f32 = player.max_vertical_speed;
-        const onWall = player.isTouchingWall(enviorment.items);
-        std.debug.print("grounded: {}, velocity: {}, onWall: {}\n", .{player_grounded, player.velocity, onWall});
-
-        if (rl.isKeyDown(rl.KeyboardKey.space) and player_grounded) {
-            player.velocity.y += -17.0;
-        }
-
-        if(rl.isKeyDown(rl.KeyboardKey.a)) {
-            if (onWall[0]) {
-                player.max_vertical_speed = 3; 
-            }
-            player.velocity.x -= 1.4;
-        }
-        if(rl.isKeyDown(rl.KeyboardKey.d)) {
-            if (onWall[1]) {
-                player.max_vertical_speed = 3; 
-            }
-            player.velocity.x += 1.4;
-        }
-
-
-
-        //apply gravity
-        player.velocity.y += 1.3;
-        player.move(enviorment);
-        player.max_vertical_speed = player_fall_speed;
-
         
-        if (player.transformer.checkCollision(floor)) {
-            player.moveBack();
-        }
 
+        player.handle_input(enviorment.items);
         for (enviorment.items) |place| {
             rl.drawRectangleRec(place, rl.Color.blue);
         }

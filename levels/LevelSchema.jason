@@ -1,18 +1,17 @@
+NumVector :: [Number]
 
 EntityTag :: "Player" | "Enviorment"
-
 Entity :: {
     name: String,
     tag: EntityTag,  
-    pos: [Number, Number]
+    pos: NumVector,
+    size: NumVector 
 }
 
-Level :: {
-    name: String,
-    tiles: [Entity]
-}
+Entity(String, EntityTag, NumVector, NumVector) :: Entity
+Entity(*name, *tag, *pos, *size) {}
+
+Level :: {name: String, entities: [Entity]}
+
 Level(String, [Entity]) :: Level
-Level(name, Entities) {
-    name: name,
-    tiles: tiles
-}
+Level(*name, *entities) {}

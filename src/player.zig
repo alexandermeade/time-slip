@@ -9,6 +9,9 @@ pub const Player = struct {
     max_horizontal_speed: f32,
     max_vertical_speed: f32,
     max_falling_speed: f32,
+    can_jump: bool,
+
+    wall_jump_velocity: rl.Vector2,
 
     pub fn init(pos: rl.Vector2, dim: rl.Vector2) @This() {
         return Player {
@@ -19,6 +22,8 @@ pub const Player = struct {
             .max_horizontal_speed = 5,
             .max_vertical_speed = 18,
             .max_falling_speed = 18,
+            .can_jump = true,
+            .wall_jump_velocity = rl.Vector2.init(10, 5),
         };
     }
     
@@ -27,15 +32,85 @@ pub const Player = struct {
         self.transformer.y = self.prev_pos.y;
     }
 
-    pub fn move(self: *Player, colliders: std.ArrayList(rl.Rectangle)) void {
+    pub fn handle_input(self: *Player, enviorment: []rl.Rectangle) void {
+        rl.pollInputEvents();
+
+        var player_grounded = false;
+        for (enviorment) |place| {
+            if (player_grounded) {
+                break;
+            }
+            player_grounded = self.isGrounded(place);
+        }
+
+        const player_fall_speed:f32 = self.max_vertical_speed;
+        const player_horizontal_speed: f32 = self.max_horizontal_speed;
+
+        const onWall = self.isTouchingWall(enviorment);
+        std.debug.print("grounded: {}, velocity: {}, onWall: {}\n", .{player_grounded, self.velocity, onWall});
+
+        if (rl.isKeyDown(rl.KeyboardKey.space) and player_grounded and self.can_jump) {
+            self.velocity.y += -17.0;
+            self.can_jump = false;
+        }
+
+        if(rl.isKeyDown(rl.KeyboardKey.a)) {
+            if (onWall[0]) {
+                self.max_vertical_speed = 3; 
+            }
+
+            if (onWall[0] and rl.isKeyDown(rl.KeyboardKey.space) and self.can_jump) {
+                self.max_vertical_speed *= 2;
+
+                self.velocity.y += -self.wall_jump_velocity.y;
+                self.max_horizontal_speed *= 4;
+                self.velocity.x += self.wall_jump_velocity.x;
+                self.can_jump = false;
+                self.transformer.x += 1;
+            } else {
+                self.velocity.x -= 1.4;
+            }         
+        }
+        if(rl.isKeyDown(rl.KeyboardKey.d)) {
+            if (onWall[1]) {
+                self.max_vertical_speed = 3; 
+            }
+           
+
+            if (onWall[1] and rl.isKeyDown(rl.KeyboardKey.space) and self.can_jump) {
+                self.max_vertical_speed *= 2;
+
+                self.velocity.y += -self.wall_jump_velocity.y;
+                self.max_horizontal_speed *= 4;
+                self.velocity.x -= self.wall_jump_velocity.x;
+                self.can_jump = false;
+                self.transformer.x -= 1;
+            }else {
+                self.velocity.x += 1.4;
+            } 
+
+        }
+
+
+
+        //apply gravity
+        self.velocity.y += 1.3;
+        self.move(enviorment);
+        self.max_horizontal_speed = player_horizontal_speed;
+        self.max_vertical_speed = player_fall_speed;
+        self.can_jump = rl.isKeyUp(rl.KeyboardKey.space) or self.can_jump;
+         
+   }
+
+    pub fn move(self: *Player, colliders: []rl.Rectangle) void {
         const friction: f32 = 1.0;
 
         self.prev_pos.x = self.transformer.x;
         self.prev_pos.y = self.transformer.y;
-
+        
         // Move horizontally
         self.transformer.x += self.velocity.x;
-        for (colliders.items) |collider| {
+        for (colliders) |collider| {
             if (self.transformer.checkCollision(collider)) {
                 self.transformer.x = self.prev_pos.x;
                 self.velocity.x = 0;
@@ -45,7 +120,7 @@ pub const Player = struct {
 
         // Move vertically
         self.transformer.y += self.velocity.y;
-        for (colliders.items) |collider| {
+        for (colliders) |collider| {
             if (self.transformer.checkCollision(collider)) {
                 self.transformer.y = self.prev_pos.y;
                 self.velocity.y = 0;
@@ -68,18 +143,19 @@ pub const Player = struct {
     }
     
     pub fn isTouchingWall(self: @This(), enviroment: []rl.Rectangle) struct {bool, bool} {
+        const hand_height = 10;
         const lHand = rl.Rectangle {
-            .x = self.transformer.x - self.transformer.width/2 - 1,
+            .x = self.transformer.x - 2,
             .y = self.transformer.y + self.transformer.height/2,
             .width = 1,
-            .height = 2
+            .height = hand_height
         };
 
         const rHand = rl.Rectangle {
             .x = self.transformer.x + self.transformer.width + 1,
             .y = self.transformer.y + self.transformer.height/2,
             .width = 1,
-            .height = 2
+            .height = hand_height
         };
         rl.drawRectangleRec(lHand, rl.Color.red);
 
@@ -101,10 +177,11 @@ pub const Player = struct {
     }
 
     pub fn isGrounded(self: @This(), floor: rl.Rectangle) bool {
+
         const foot = rl.Rectangle {
-            .x = self.transformer.x + self.transformer.width/2,
+            .x = self.transformer.x,
             .y = self.transformer.y + self.transformer.height + 3,
-            .width = 3,
+            .width = self.transformer.width,
             .height = 1,
         };
 
