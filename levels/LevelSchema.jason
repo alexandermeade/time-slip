@@ -1,6 +1,6 @@
 NumVector :: [Number]
 
-EntityTag :: "Player" | "Enviorment"
+EntityTag :: "Player" | "Environment" | "Enemy" | "Projectile"
 Entity :: {
     name: String,
     tag: EntityTag,  

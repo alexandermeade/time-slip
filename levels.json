@@ -1,0 +1,221 @@
+{
+  "entities": [
+    {
+      "name": "player",
+      "pos": [
+        30,
+        350
+      ],
+      "size": [
+        40,
+        40
+      ],
+      "tag": "Player"
+    },
+    {
+      "name": "ground",
+      "pos": [
+        0,
+        400
+      ],
+      "size": [
+        800,
+        20
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "wall_left",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        15,
+        400
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "wall_right",
+      "pos": [
+        785,
+        0
+      ],
+      "size": [
+        15,
+        400
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "ceiling",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        800,
+        15
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "platform1",
+      "pos": [
+        50,
+        320
+      ],
+      "size": [
+        120,
+        15
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "platform2",
+      "pos": [
+        220,
+        260
+      ],
+      "size": [
+        100,
+        15
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "platform3",
+      "pos": [
+        370,
+        200
+      ],
+      "size": [
+        100,
+        15
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "platform4",
+      "pos": [
+        520,
+        260
+      ],
+      "size": [
+        100,
+        15
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "platform5",
+      "pos": [
+        670,
+        320
+      ],
+      "size": [
+        120,
+        15
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "platform6",
+      "pos": [
+        150,
+        150
+      ],
+      "size": [
+        80,
+        15
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "platform7",
+      "pos": [
+        400,
+        100
+      ],
+      "size": [
+        80,
+        15
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "platform8",
+      "pos": [
+        600,
+        150
+      ],
+      "size": [
+        80,
+        15
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "playform8",
+      "pos": [
+        500,
+        100
+      ],
+      "size": [
+        80,
+        15
+      ],
+      "tag": "Enemy"
+    },
+    {
+      "name": "barrier1",
+      "pos": [
+        300,
+        320
+      ],
+      "size": [
+        15,
+        80
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "barrier2",
+      "pos": [
+        500,
+        320
+      ],
+      "size": [
+        15,
+        80
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "barrier3",
+      "pos": [
+        200,
+        150
+      ],
+      "size": [
+        15,
+        60
+      ],
+      "tag": "Environment"
+    },
+    {
+      "name": "barrier4",
+      "pos": [
+        550,
+        150
+      ],
+      "size": [
+        15,
+        60
+      ],
+      "tag": "Environment"
+    }
+  ],
+  "name": "alex"
+}

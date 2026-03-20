@@ -1,6 +1,8 @@
 const std = @import("std");
 const rl = @import("raylib");
 const player_zig = @import("player.zig");
+const entity = @import("entity.zig");
+const level = @import("level.zig");
 
 pub fn main() anyerror!void {
     var debugAllocator = std.heap.DebugAllocator(.{}).init;
@@ -10,31 +12,38 @@ pub fn main() anyerror!void {
     const screenWidth = 800;
     const screenHeight = 450;
 
-    var player = player_zig.Player.init(rl.Vector2.init(0, 0), rl.Vector2.init(40, 40));
-    const floor = rl.Rectangle.init(0, 300, 2*screenHeight, 20);
+    var player = player_zig.Player.init(rl.Vector2.init(30, 30), rl.Vector2.init(40, 40));
     rl.initWindow(screenWidth, screenHeight, "raylib-zig [core] example - basic window");
     defer rl.closeWindow(); // Close window and OpenGL context
 
     rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
-    var enviorment = std.ArrayList(rl.Rectangle).empty;
+    var enviorment = std.ArrayList(entity.Entity).empty;
     defer enviorment.deinit(gpa);
-    try enviorment.append(gpa, floor);
+    const json_content = try std.fs.cwd().readFileAlloc(gpa, "./levels.json", 100000);
+    defer gpa.free(json_content);
 
-    try enviorment.append(gpa, rl.Rectangle.init(50, 250, 30, 40));
-    try enviorment.append(gpa, rl.Rectangle.init(100, 150, 30, 500));
+    const levelTemplates = std.json.parseFromSlice(level.LevelTemplate, gpa, json_content, .{ .allocate = .alloc_always}) catch |err| {
+        std.debug.print("failed at parse {}", .{err});
+        return err;
+    };  
+    defer levelTemplates.deinit();
 
-    try enviorment.append(gpa, rl.Rectangle.init(200, 150, 30, 500));
-    
-    try enviorment.append(gpa, rl.Rectangle.init(300, 0, 30, 1000));
+    const level1 = try levelTemplates.value.into_level(gpa);
+    defer gpa.free(level1.entities);
 
-    while (!rl.windowShouldClose()) { // Detect window close button or ESC key
-        
+    for (level1.entities) |e| {
+        try enviorment.append(gpa, e);
+    }
 
+    while (!rl.windowShouldClose()) { // Detect window close button or ESC key 
         player.handle_input(enviorment.items);
-        for (enviorment.items) |place| {
-            rl.drawRectangleRec(place, rl.Color.blue);
+        for (enviorment.items) |e| {
+            switch (e.tag){
+                .Enemy => rl.drawRectangleRec(e.rect, rl.Color.red),
+                else => rl.drawRectangleRec(e.rect, rl.Color.blue)
+            }
         }
 
         // Draw
