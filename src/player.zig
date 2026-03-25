@@ -290,7 +290,7 @@ pub const Player = struct {
                 self.velocity.x = @min(0, self.velocity.x + friction);
             }
         } else {
-            const slide_friction: f32 = 0.20;
+            const slide_friction: f32 = 0.10;
             if (self.velocity.x > 0) {
                 self.velocity.x = @max(0, self.velocity.x - slide_friction);
             } else if (self.velocity.x < 0) {

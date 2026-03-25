@@ -47,9 +47,9 @@ pub fn main() anyerror!void {
     while (!rl.windowShouldClose()) { // Detect window close button or ESC key 
 
 
+        player.handle_input(enviorment.items);
         rl.beginTextureMode(render_texture);
 
-        player.handle_input(enviorment.items);
         player.draw();
         for (enviorment.items) |e| {
             switch (e.tag){
