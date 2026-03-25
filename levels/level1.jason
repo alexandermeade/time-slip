@@ -15,8 +15,8 @@ entities = [
     Entity("platform7", "Environment", [160, 40], [32, 6]),
     Entity("platform8", "Environment", [240, 60], [32, 6]),
     Entity("enemy1", "Enemy", [200, 40], [32, 6]),
-    Entity("barrier1", "Environment", [120, 128], [6, 32]),
-    Entity("barrier2", "Environment", [200, 128], [6, 32]),
+    Entity("barrier1", "Environment", [120, 120], [6, 32]),
+    Entity("barrier2", "Environment", [200, 120], [6, 32]),
     Entity("barrier3", "Environment", [80, 60], [6, 24]),
     Entity("barrier4", "Environment", [220, 60], [6, 24])
 ]

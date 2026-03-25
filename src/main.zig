@@ -44,11 +44,11 @@ pub fn main() anyerror!void {
     }
 
     while (!rl.windowShouldClose()) { // Detect window close button or ESC key 
-        player.handle_input(enviorment.items);
 
 
         rl.beginTextureMode(render_texture);
-        rl.clearBackground(rl.Color.white);
+
+        player.handle_input(enviorment.items);
         player.draw();
         for (enviorment.items) |e| {
             switch (e.tag){
@@ -56,9 +56,11 @@ pub fn main() anyerror!void {
                 else => rl.drawRectangleRec(e.rect, rl.Color.blue)
             }
         }
-
-
-            
+        var buf:[300]u8 =undefined; 
+        const res = try std.fmt.bufPrintZ(&buf, "x: {} y: {}", .{player.transformer.x, player.transformer.y});
+        rl.drawText(res, 0, 0, 12, rl.Color.red);
+                
+        rl.clearBackground(rl.Color.white);
         rl.endTextureMode();
 
         const screen_w: f32 = @floatFromInt(rl.getScreenWidth());
