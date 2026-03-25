@@ -1,31 +1,24 @@
 import($, Entity, Level) from "./levels/LevelSchema.jason"
-
 level_name = "alex"
 entities = [
-    Entity("player", "Player", [30, 350], [40, 40]),
-
-    Entity("ground", "Environment", [0, 400], [800, 20]),
-
-    Entity("wall_left", "Environment", [0, 0], [15, 400]),
-    Entity("wall_right", "Environment", [785, 0], [15, 400]),
-
-    Entity("ceiling", "Environment", [0, 0], [800, 15]),
-
-    Entity("platform1", "Environment", [50, 320], [120, 15]),
-    Entity("platform2", "Environment", [220, 260], [100, 15]),
-    Entity("platform3", "Environment", [370, 200], [100, 15]),
-    Entity("platform4", "Environment", [520, 260], [100, 15]),
-    Entity("platform5", "Environment", [670, 320], [120, 15]),
-    Entity("platform6", "Environment", [150, 150], [80, 15]),
-    Entity("platform7", "Environment", [400, 100], [80, 15]),
-    Entity("platform8", "Environment", [600, 150], [80, 15]),
-    Entity("playform8", "Enemy", [500, 100], [80, 15]),
-
-    Entity("barrier1", "Environment", [300, 320], [15, 80]),
-    Entity("barrier2", "Environment", [500, 320], [15, 80]),
-    Entity("barrier3", "Environment", [200, 150], [15, 60]),
-    Entity("barrier4", "Environment", [550, 150], [15, 60]),
+    Entity("player", "Player", [12, 140], [16, 16]),
+    Entity("ground", "Environment", [0, 168], [320, 8]),
+    Entity("wall_left", "Environment", [0, 0], [6, 168]),
+    Entity("wall_right", "Environment", [314, 0], [6, 180]),
+    Entity("ceiling", "Environment", [0, 0], [320, 6]),
+    Entity("platform1", "Environment", [20, 128], [48, 6]),
+    Entity("platform2", "Environment", [88, 104], [40, 6]),
+    Entity("platform3", "Environment", [148, 80], [40, 6]),
+    Entity("platform4", "Environment", [208, 104], [40, 6]),
+    Entity("platform5", "Environment", [268, 128], [48, 6]),
+    Entity("platform6", "Environment", [60, 60], [32, 6]),
+    Entity("platform7", "Environment", [160, 40], [32, 6]),
+    Entity("platform8", "Environment", [240, 60], [32, 6]),
+    Entity("enemy1", "Enemy", [200, 40], [32, 6]),
+    Entity("barrier1", "Environment", [120, 128], [6, 32]),
+    Entity("barrier2", "Environment", [200, 128], [6, 32]),
+    Entity("barrier3", "Environment", [80, 60], [6, 24]),
+    Entity("barrier4", "Environment", [220, 60], [6, 24])
 ]
-
 level: Level = Level(level_name, entities)
 out level

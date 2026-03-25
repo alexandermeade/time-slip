@@ -1,8 +1,11 @@
 # Features to add
 - [X] Basic Physics
 - [X] Basic Movement
-- [] Implement Wall sliding/jumping
-- [] Implement Melee
-- [] Implement Melee Jump
+- [x] Implement Wall sliding/jumping
+- [x] Implement Melee
+- [x] Implement Melee Jump
+- [x] implement sprites
+- [] do basic animations
+- [] do lighting
 - [] Implement Past Images (Your past self you can interact with)
 - [] Implement Clocks
