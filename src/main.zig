@@ -13,8 +13,9 @@ pub fn main() anyerror!void {
     const screenHeight = 180;
 
  
-    rl.initWindow(screenWidth, screenHeight, "raylib-zig [core] example - basic window");
+    //rl.initWindow(screenWidth, screenHeight, "raylib-zig [core] example - basic window");
 
+    rl.initWindow(rl.getScreenWidth(), rl.getScreenHeight(), "raylib-zig [core] example - basic window");
     const render_texture = try rl.RenderTexture2D.init(screenWidth, screenHeight);
     defer rl.closeWindow(); // Close window and OpenGL context
     //Need raylib window init before using raylib textures
@@ -22,7 +23,7 @@ pub fn main() anyerror!void {
     defer player.deinit();
 
 
-    rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
+    rl.setTargetFPS(30); // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
     var enviorment = std.ArrayList(entity.Entity).empty;
@@ -71,6 +72,8 @@ pub fn main() anyerror!void {
         const offset_y = (screen_h - screenHeight * scale) / 2.0;
 
         rl.beginDrawing();
+
+        
         rl.clearBackground(rl.Color.black); 
             
         const src = rl.Rectangle{ 
@@ -87,9 +90,7 @@ pub fn main() anyerror!void {
         };
         defer rl.endDrawing();
 
-        rl.drawText("Congrats! You created your first window!", 190, 200, 20, .light_gray);
         rl.drawTexturePro(render_texture.texture, src, dst, rl.Vector2.zero(), 0.0, rl.Color.white);
-        rl.endDrawing();
 
     }
 }
