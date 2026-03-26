@@ -23,7 +23,7 @@ pub fn main() anyerror!void {
     defer player.deinit();
 
 
-    rl.setTargetFPS(30); // Set our game to run at 60 frames-per-second
+    rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
     var enviorment = std.ArrayList(entity.Entity).empty;
