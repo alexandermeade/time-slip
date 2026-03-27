@@ -57,6 +57,7 @@ pub fn main() anyerror!void {
         }
         var buf:[300]u8 =undefined; 
         const res = try std.fmt.bufPrintZ(&buf, "x: {} y: {} fps: {}", .{player.velocity.x, player.velocity.y, rl.getFPS()});
+        std.debug.print("{s}\n", .{res});
         rl.drawText(res, 0, 0, 12, rl.Color.red);
                 
         rl.clearBackground(rl.Color.white);
@@ -92,3 +93,4 @@ pub fn main() anyerror!void {
 
     }
 }
+

@@ -42,37 +42,49 @@ pub const Player = struct {
     gravity: f32,
     walk_speed: f32,
     jump_height: f32,
+    jump_speed: f32,
+    wall_fall_speed: f32,
+    fixed_horizontal_speed: f32,
+
+    fixed_vertical_speed: f32,
 
     pub fn init(pos: rl.Vector2, dim: rl.Vector2) !@This() {
+        const fixed_horizontal_speed = 75;
+        const fixed_vertical_speed = 3000;
         return Player{
             .dimensions = dim,
             .velocity = rl.Vector2.zero(),
             .transformer = rl.Rectangle.init(pos.x, pos.y, dim.x, dim.y),
-            .prev_pos = .zero(),
-            .max_horizontal_speed = 50,
-            .max_vertical_speed = 50,
-            .max_falling_speed = 100,
+            .prev_pos = .zero(), 
+            .fixed_horizontal_speed = fixed_horizontal_speed,   
+            .fixed_vertical_speed = fixed_vertical_speed,    
+            .max_horizontal_speed = fixed_horizontal_speed,
+            .max_vertical_speed = fixed_vertical_speed,
+            .max_falling_speed = 3000,     
             .can_jump = true,
-            .wall_jump_velocity = rl.Vector2.init(10, 5),
+            .wall_jump_velocity = rl.Vector2.init(300, 600), 
             .coyote_timer = 0,
-            .coyote_duration = 8,
+            .coyote_duration = 0.133,      
             .can_swing = true,
-            .slide_velocity = 14,
+            .slide_velocity = 200,         
             .slide_timer = 0,
-            .slide_duration = 18,
+            .slide_duration = 0.3,         
             .slide_cooldown_timer = 0,
-            .slide_cooldown = 45,
+            .slide_cooldown = 0.75,        
             .is_sliding = false,
             .slide_dir = 1,
             .stand_height = dim.y,
             .crouch_height = dim.y / 2.0,
             .crouching = false,
             .player_sprite = try rl.Texture2D.init("./assets/player.png"),
-            .gravity = 5.0,
-            .jump_height = 3000.0,
-            .walk_speed = 7
+            .gravity = 300.0,             
+            .jump_height = 175.0,         
+            .walk_speed = 1000,             
+            .jump_speed = 2000,
+            .wall_fall_speed = 90, 
         };
     }
+
     pub fn moveBack(self: *Player) void {
         self.transformer.x = self.prev_pos.x;
         self.transformer.y = self.prev_pos.y;
@@ -102,36 +114,39 @@ pub const Player = struct {
         return true;
     }
 
-    fn setStanding(self: *Player) void {
+    fn setStanding(self: *Player, prev_speed: f32) void {
         if (!self.crouching) return;
         const bottom = self.transformer.y + self.transformer.height;
         self.transformer.height = self.stand_height;
         self.transformer.y = bottom - self.stand_height;
+        self.max_horizontal_speed = prev_speed;
+        self.velocity.x = std.math.clamp(self.velocity.x, -self.max_horizontal_speed, self.max_horizontal_speed);
         self.crouching = false;
     }
 
     pub fn handle_input(self: *Player, enviorment: []entity.Entity) void {
         rl.pollInputEvents();
-
+        const dt = rl.getFrameTime();
         var player_grounded = false;
         for (enviorment) |e| {
             if (player_grounded) break;
             player_grounded = self.isGrounded(e.rect);
         }
 
+        std.debug.print("player_grounded = {}", .{player_grounded});
+
         if (player_grounded) {
             self.coyote_timer = self.coyote_duration;
             if (self.velocity.y > 0) self.velocity.y = 0;
         } else if (self.coyote_timer > 0) {
-            self.coyote_timer -= 1;
+            self.coyote_timer -= dt;  
         }
 
-        if (self.slide_cooldown_timer > 0) self.slide_cooldown_timer -= 1;
+        if (self.slide_cooldown_timer > 0) self.slide_cooldown_timer -= dt;  
 
         if (rl.isKeyDown(rl.KeyboardKey.a)) self.slide_dir = -1;
         if (rl.isKeyDown(rl.KeyboardKey.d)) self.slide_dir = 1;
 
-        
         if (rl.isKeyDown(rl.KeyboardKey.left_shift) and
             player_grounded and
             !self.is_sliding and
@@ -139,26 +154,25 @@ pub const Player = struct {
         {
             self.is_sliding = true;
             self.slide_timer = self.slide_duration;
-            self.velocity.x = self.slide_velocity * self.slide_dir;
-            
+            self.max_horizontal_speed = self.slide_velocity;
+            self.velocity.x = self.slide_velocity * self.slide_dir;  
             self.setCrouching();
         }
 
-        
         if (self.is_sliding) {
-            if (self.slide_timer > 0) self.slide_timer -= 1;
+            if (self.slide_timer > 0) self.slide_timer -= dt;  
 
             if (self.slide_timer <= 0 and self.canStand(enviorment)) {
                 self.is_sliding = false;
                 self.slide_cooldown_timer = self.slide_cooldown;
-                self.velocity.x = self.slide_dir * self.max_horizontal_speed;
-                self.setStanding();
+                self.velocity.x = self.slide_dir * self.max_horizontal_speed;  
+
+                self.setStanding(self.fixed_horizontal_speed);
             }
         }
 
-        
         if (!self.is_sliding and self.crouching and self.canStand(enviorment)) {
-            self.setStanding();
+            self.setStanding(self.fixed_horizontal_speed);
         }
 
         const attack_dir_bits: u4 = if (self.can_swing)
@@ -170,10 +184,13 @@ pub const Player = struct {
             0b0000;
 
         var attack_vec = rl.Vector2.zero();
+
         std.debug.print("{}", .{attack_dir_bits});
+
         const sword_height = 5;
         const sword_width = 10;
         const sword_offset = 5;
+
         const sword_rect: ?rl.Rectangle = switch (attack_dir_bits) {
             @intFromEnum(AttackDir.left) => left: {
                 attack_vec.x = 1;
@@ -233,50 +250,48 @@ pub const Player = struct {
         if (hit_entity) |e| {
             if (e.tag == .Enemy or e.tag == .Projectile) {
                 attack_vec = attack_vec.scale(25);
-                self.velocity = self.velocity.add(attack_vec);
+                self.velocity = self.velocity.add(attack_vec);  
             }
         }
 
-        
         {
             const can_coyote_jump = self.coyote_timer > 0 and self.velocity.y >= 0;
             const onWall = self.isTouchingWall(enviorment);
 
             if (!self.is_sliding) {
                 if (rl.isKeyDown(rl.KeyboardKey.space) and can_coyote_jump and self.can_jump) {
-                    self.velocity.y = -self.jump_height;
-                    self.max_vertical_speed = 100;
+                    self.velocity.y = -self.jump_speed;  
+                    self.max_vertical_speed = self.jump_height;
                     self.can_jump = false;
                     self.coyote_timer = 0;
                 }
 
                 if (rl.isKeyDown(rl.KeyboardKey.a)) {
                     if (onWall[0] and rl.isKeyDown(rl.KeyboardKey.space) and (self.can_jump or can_coyote_jump)) {
-                        self.velocity.y = -self.wall_jump_velocity.y * 2;
-                        self.velocity.x = self.wall_jump_velocity.x * 2;
+                        self.velocity.y = -self.wall_jump_velocity.y * 2;  
+                        self.velocity.x = self.wall_jump_velocity.x * 2;   
                         self.can_jump = false;
                         self.transformer.x += 1;
                     } else {
-                        self.velocity.x -= self.walk_speed;
-                        if (onWall[0] and self.velocity.y > 3) self.velocity.y = 3;
+                        self.velocity.x -= self.walk_speed * dt;  
+                        if (onWall[0] and self.velocity.y > 90) self.velocity.y = self.wall_fall_speed;  
                     }
                 }
 
                 if (rl.isKeyDown(rl.KeyboardKey.d)) {
                     if (onWall[1] and rl.isKeyDown(rl.KeyboardKey.space) and (self.can_jump or can_coyote_jump)) {
-                        self.velocity.y = -self.wall_jump_velocity.y * 2;
-                        self.velocity.x = -self.wall_jump_velocity.x * 2;
+                        self.velocity.y = -self.wall_jump_velocity.y * 2;  
+                        self.velocity.x = -self.wall_jump_velocity.x * 2;  
                         self.can_jump = false;
                         self.transformer.x -= 1;
                     } else {
-                        self.velocity.x += self.walk_speed;
-                        if (onWall[1] and self.velocity.y > 3) self.velocity.y = 3;
+                        self.velocity.x += self.walk_speed * dt;  
+                        if (onWall[1] and self.velocity.y > 90) self.velocity.y = self.wall_fall_speed;  
                     }
                 }
             }
 
-            
-            self.velocity.y += self.gravity; 
+            self.velocity.y += self.gravity * dt;  
         }
 
         self.move(enviorment);
@@ -289,37 +304,38 @@ pub const Player = struct {
     }
 
     pub fn move(self: *Player, colliders: []entity.Entity) void {
+        const dt = rl.getFrameTime();
+
         if (!self.is_sliding) {
-            const friction: f32 = 2.0;
+            
+            const friction: f32 = 400;  
             if (self.velocity.x > 0) {
-                self.velocity.x = @max(0, self.velocity.x - friction);
+                self.velocity.x = @max(0, self.velocity.x - friction * dt);
             } else if (self.velocity.x < 0) {
-                self.velocity.x = @min(0, self.velocity.x + friction);
+                self.velocity.x = @min(0, self.velocity.x + friction * dt);
             }
         } else {
-            const slide_friction: f32 = 2.0 * 0.1;
+            const slide_friction: f32 = self.walk_speed/8;  
             if (self.velocity.x > 0) {
-                self.velocity.x = @max(0, self.velocity.x - slide_friction);
+                self.velocity.x = @max(0, self.velocity.x - slide_friction * dt);
             } else if (self.velocity.x < 0) {
-                self.velocity.x = @min(0, self.velocity.x + slide_friction);
+                self.velocity.x = @min(0, self.velocity.x + slide_friction * dt);
             }
         }
 
         self.velocity.x = std.math.clamp(self.velocity.x, -self.max_horizontal_speed, self.max_horizontal_speed);
-        
         self.velocity.y = std.math.clamp(self.velocity.y, -self.max_vertical_speed, self.max_falling_speed);
 
         self.prev_pos.x = self.transformer.x;
         self.prev_pos.y = self.transformer.y;
-    
 
-        //move x
-        self.transformer.x += self.velocity.x * rl.getFrameTime();
+        
+        self.transformer.x += self.velocity.x * dt;
         for (colliders) |collider| {
             if (self.transformer.checkCollision(collider.rect)) {
                 self.transformer.x = self.prev_pos.x;
                 self.velocity.x = 0;
-                
+
                 if (self.is_sliding) {
                     self.is_sliding = false;
                     self.slide_cooldown_timer = self.slide_cooldown;
@@ -328,12 +344,16 @@ pub const Player = struct {
                 break;
             }
         }
+
         
-        //move y
-        self.transformer.y += self.velocity.y * rl.getFrameTime();
+        self.transformer.y += self.velocity.y * dt;
         for (colliders) |collider| {
             if (self.transformer.checkCollision(collider.rect)) {
-                self.transformer.y = self.prev_pos.y;
+                if (self.velocity.y > 0) {
+                    self.transformer.y = collider.rect.y - self.transformer.height;
+                } else {
+                    self.transformer.y = collider.rect.y + collider.rect.height;
+                }
                 self.velocity.y = 0;
                 break;
             }
@@ -352,11 +372,12 @@ pub const Player = struct {
         };
 
         const rHand = rl.Rectangle{
-            .x = self.transformer.x + self.transformer.width + hand_width,
+            .x = self.transformer.x + self.transformer.width,  
             .y = self.transformer.y + self.transformer.height / 2,
             .width = hand_width,
             .height = hand_height,
         };
+
         rl.drawRectangleRec(lHand, rl.Color.red);
         rl.drawRectangleRec(rHand, rl.Color.green);
 
@@ -374,7 +395,7 @@ pub const Player = struct {
     pub fn isGrounded(self: @This(), floor: rl.Rectangle) bool {
         const foot = rl.Rectangle{
             .x = self.transformer.x,
-            .y = self.transformer.y + self.transformer.height + 3,
+            .y = self.transformer.y + self.transformer.height,
             .width = self.transformer.width,
             .height = 1,
         };
@@ -407,3 +428,4 @@ pub const Player = struct {
         self.player_sprite.unload();
     }
 };
+
