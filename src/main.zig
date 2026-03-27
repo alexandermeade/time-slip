@@ -22,8 +22,6 @@ pub fn main() anyerror!void {
     var player = try player_zig.Player.init(rl.Vector2.init(30, 30), rl.Vector2.init(20 * 0.4, 40 * 0.4));
     defer player.deinit();
 
-
-    rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
     var enviorment = std.ArrayList(entity.Entity).empty;
@@ -58,7 +56,7 @@ pub fn main() anyerror!void {
             }
         }
         var buf:[300]u8 =undefined; 
-        const res = try std.fmt.bufPrintZ(&buf, "x: {} y: {}", .{player.transformer.x, player.transformer.y});
+        const res = try std.fmt.bufPrintZ(&buf, "x: {} y: {} fps: {}", .{player.velocity.x, player.velocity.y, rl.getFPS()});
         rl.drawText(res, 0, 0, 12, rl.Color.red);
                 
         rl.clearBackground(rl.Color.white);

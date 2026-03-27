@@ -39,15 +39,19 @@ pub const Player = struct {
 
     player_sprite: rl.Texture,
 
+    gravity: f32,
+    walk_speed: f32,
+    jump_height: f32,
+
     pub fn init(pos: rl.Vector2, dim: rl.Vector2) !@This() {
         return Player{
             .dimensions = dim,
             .velocity = rl.Vector2.zero(),
             .transformer = rl.Rectangle.init(pos.x, pos.y, dim.x, dim.y),
             .prev_pos = .zero(),
-            .max_horizontal_speed = 5,
-            .max_vertical_speed = 18,
-            .max_falling_speed = 18,
+            .max_horizontal_speed = 50,
+            .max_vertical_speed = 50,
+            .max_falling_speed = 100,
             .can_jump = true,
             .wall_jump_velocity = rl.Vector2.init(10, 5),
             .coyote_timer = 0,
@@ -64,9 +68,11 @@ pub const Player = struct {
             .crouch_height = dim.y / 2.0,
             .crouching = false,
             .player_sprite = try rl.Texture2D.init("./assets/player.png"),
+            .gravity = 5.0,
+            .jump_height = 3000.0,
+            .walk_speed = 7
         };
     }
-
     pub fn moveBack(self: *Player) void {
         self.transformer.x = self.prev_pos.x;
         self.transformer.y = self.prev_pos.y;
@@ -238,7 +244,8 @@ pub const Player = struct {
 
             if (!self.is_sliding) {
                 if (rl.isKeyDown(rl.KeyboardKey.space) and can_coyote_jump and self.can_jump) {
-                    self.velocity.y = -12.0;
+                    self.velocity.y = -self.jump_height;
+                    self.max_vertical_speed = 100;
                     self.can_jump = false;
                     self.coyote_timer = 0;
                 }
@@ -250,7 +257,7 @@ pub const Player = struct {
                         self.can_jump = false;
                         self.transformer.x += 1;
                     } else {
-                        self.velocity.x -= 1.4;
+                        self.velocity.x -= self.walk_speed;
                         if (onWall[0] and self.velocity.y > 3) self.velocity.y = 3;
                     }
                 }
@@ -262,14 +269,14 @@ pub const Player = struct {
                         self.can_jump = false;
                         self.transformer.x -= 1;
                     } else {
-                        self.velocity.x += 1.4;
+                        self.velocity.x += self.walk_speed;
                         if (onWall[1] and self.velocity.y > 3) self.velocity.y = 3;
                     }
                 }
             }
 
             
-            self.velocity.y += 1.3;
+            self.velocity.y += self.gravity; 
         }
 
         self.move(enviorment);
@@ -283,14 +290,14 @@ pub const Player = struct {
 
     pub fn move(self: *Player, colliders: []entity.Entity) void {
         if (!self.is_sliding) {
-            const friction: f32 = 1.0;
+            const friction: f32 = 2.0;
             if (self.velocity.x > 0) {
                 self.velocity.x = @max(0, self.velocity.x - friction);
             } else if (self.velocity.x < 0) {
                 self.velocity.x = @min(0, self.velocity.x + friction);
             }
         } else {
-            const slide_friction: f32 = 0.10;
+            const slide_friction: f32 = 2.0 * 0.1;
             if (self.velocity.x > 0) {
                 self.velocity.x = @max(0, self.velocity.x - slide_friction);
             } else if (self.velocity.x < 0) {
@@ -299,12 +306,15 @@ pub const Player = struct {
         }
 
         self.velocity.x = std.math.clamp(self.velocity.x, -self.max_horizontal_speed, self.max_horizontal_speed);
-        self.velocity.y = std.math.clamp(self.velocity.y, -self.max_falling_speed, self.max_vertical_speed);
+        
+        self.velocity.y = std.math.clamp(self.velocity.y, -self.max_vertical_speed, self.max_falling_speed);
 
         self.prev_pos.x = self.transformer.x;
         self.prev_pos.y = self.transformer.y;
+    
 
-        self.transformer.x += self.velocity.x;
+        //move x
+        self.transformer.x += self.velocity.x * rl.getFrameTime();
         for (colliders) |collider| {
             if (self.transformer.checkCollision(collider.rect)) {
                 self.transformer.x = self.prev_pos.x;
@@ -318,8 +328,9 @@ pub const Player = struct {
                 break;
             }
         }
-
-        self.transformer.y += self.velocity.y;
+        
+        //move y
+        self.transformer.y += self.velocity.y * rl.getFrameTime();
         for (colliders) |collider| {
             if (self.transformer.checkCollision(collider.rect)) {
                 self.transformer.y = self.prev_pos.y;
